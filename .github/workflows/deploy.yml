@@ -1,8 +1,8 @@
+name: Close Preview
 on:
   push:
     branches:
       - master
-
 jobs:
   api:
     name: deploy ECR and create App Runner
