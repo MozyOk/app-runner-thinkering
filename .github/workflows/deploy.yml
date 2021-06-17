@@ -1,0 +1,42 @@
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  api:
+    name: deploy ECR and create App Runner
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Amazon ECR "Login" Action for GitHub Actions
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ secrets.AWS_ECR_REPOSITORY }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      # App Runner サービス作成
+      - name: Create App Runner Service if no exist.
+        env:
+          AWS_ID: ${{ secrets.AWS_ID }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          SERVICE_NAME: sample_node
+        run: |
+          SERVICE=`aws apprunner list-services --query "length(ServiceSummaryList[?ServiceName=='$SERVICE_NAME'])"`
+          if [ $SERVICE -eq 0 ]; then
+              sed -e "s/<AWS_ID>/${AWS_ID}/" -e "s/<AWS_REGION>/${AWS_REGION}/" ./source-configuration.json.template > ./source-configuration.json
+              aws apprunner create-service --cli-input-json file://source-configuration.json
+          fi

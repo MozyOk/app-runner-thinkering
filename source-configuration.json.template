@@ -1,0 +1,24 @@
+{
+    "ServiceName": "sample_node",
+    "SourceConfiguration": {
+        "ImageRepository": {
+            "ImageIdentifier": "<AWS_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/sample_node_for_app_runner:latest",
+            "ImageConfiguration": {
+                "Port": "3000"
+            },
+            "ImageRepositoryType": "ECR"
+        },
+        "AutoDeploymentsEnabled": true,
+        "AuthenticationConfiguration": {
+            "AccessRoleArn": "arn:aws:iam::<AWS_ID>:role/tf-AppRunnerECRAccessRole"
+        }
+    },
+    "HealthCheckConfiguration": {
+        "Protocol": "TCP",
+        "Interval": 10,
+        "Timeout": 5,
+        "HealthyThreshold": 1,
+        "UnhealthyThreshold": 5
+    },
+    "AutoScalingConfigurationArn": "arn:aws:apprunner:<AWS_REGION>:<AWS_ID>:autoscalingconfiguration/minimum_setting/1/xxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
